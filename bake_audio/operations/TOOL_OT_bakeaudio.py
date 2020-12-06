@@ -29,6 +29,8 @@ class TOOL_OT_bakeaudio(bpy.types.Operator):
     update_preview_range: bool
     insert_audio_strip: bool
 
+    # TODO: Convert this operation to be modal, and show progress in the main Options panel
+
     def execute(self, context):
         scene = context.scene
         options = scene.bakeaudio.options
@@ -84,6 +86,7 @@ class TOOL_OT_bakeaudio(bpy.types.Operator):
 
     def __generate_audio_data(self, context):
         scene = context.scene
+        window_manager = context.window_manager
 
         frequency_ranges = self.__get_frequency_ranges()
 
@@ -105,6 +108,7 @@ class TOOL_OT_bakeaudio(bpy.types.Operator):
 
         # Generate audio data
         self.__bake_audio_data_to_fcurves(
+            window_manager,
             scene,
             data_group,
             frequency_ranges
@@ -201,53 +205,66 @@ class TOOL_OT_bakeaudio(bpy.types.Operator):
         properties.prop_utils.property_setter(data_group, 'threshold')(
             self.threshold
         )
+        properties.prop_utils.property_setter(data_group, 'frame_start')(
+            self.frame_start
+        )
+        properties.prop_utils.property_setter(data_group, 'frame_end')(
+            0
+        )
 
         return data_group
 
-    def __bake_audio_data_to_fcurves(self, scene, data_group, frequency_ranges):
-        i_str_width = len(str(len(frequency_ranges)))
-        for (i, (range_min_frequency, range_max_frequency)) in enumerate(frequency_ranges, start=0):
-            # Clear F-Curve selection so data doesn't get overwritten
-            if scene.animation_data:
-                for fcurve in scene.animation_data.action.fcurves:
-                    fcurve.select = False
+    def __bake_audio_data_to_fcurves(self, window_manager, scene, data_group, frequency_ranges):
+        window_manager.progress_begin(0, len(frequency_ranges))
+        try:
+            i_str_width = len(str(len(frequency_ranges)))
+            for (i, (range_min_frequency, range_max_frequency)) in enumerate(frequency_ranges, start=0):
+                # Show progress
+                window_manager.progress_update(i + 1)
 
-            # Create the object which will hold the data
-            frequency_band_data = data_group.bands.add()
-            properties.prop_utils.property_setter(frequency_band_data, 'name')(
-                f'[{str(i).rjust(i_str_width, "0")}] {int(range_min_frequency)}Hz to {int(range_max_frequency)}Hz'
-            )
-            properties.prop_utils.property_setter(frequency_band_data, 'index')(
-                i
-            )
-            properties.prop_utils.property_setter(frequency_band_data, 'frequency_band_min')(
-                range_min_frequency
-            )
-            properties.prop_utils.property_setter(frequency_band_data, 'frequency_band_max')(
-                range_max_frequency
-            )
-            properties.prop_utils.property_setter(frequency_band_data, 'value')(
-                0.0
-            )
+                # Clear F-Curve selection so data doesn't get overwritten
+                if scene.animation_data:
+                    for fcurve in scene.animation_data.action.fcurves:
+                        fcurve.select = False
 
-            # Insert a keyframe to generate an F-Curve for the property
-            scene.frame_set(self.frame_start)
-            frequency_band_data.keyframe_insert(
-                f'["value"]',
-                frame=self.frame_start,
-                group=self.fcurve_group_name)
+                # Create the object which will hold the data
+                frequency_band_data = data_group.bands.add()
+                properties.prop_utils.property_setter(frequency_band_data, 'name')(
+                    f'[{str(i).rjust(i_str_width, "0")}] {int(range_min_frequency)}Hz to {int(range_max_frequency)}Hz'
+                )
+                properties.prop_utils.property_setter(frequency_band_data, 'index')(
+                    i
+                )
+                properties.prop_utils.property_setter(frequency_band_data, 'frequency_band_min')(
+                    range_min_frequency
+                )
+                properties.prop_utils.property_setter(frequency_band_data, 'frequency_band_max')(
+                    range_max_frequency
+                )
+                properties.prop_utils.property_setter(frequency_band_data, 'value')(
+                    0.0
+                )
 
-            # Bake the sound into the new property
-            # If this fails due to sound_bake.poll() failing, see the poll() source code here: https://github.com/blender/blender/blob/2d1cce8331f3ecdfb8cb0c651e111ffac5dc7153/source/blender/editors/space_graph/graph_utils.c#L292
-            # The sound_bake operation source code is here: https://github.com/blender/blender/blob/600a627f6e326f4542a876e6e82f771cd3da218f/source/blender/editors/space_graph/graph_edit.c#L1845
-            bpy.ops.graph.sound_bake(
-                filepath=self.filepath,
-                low=range_min_frequency,
-                high=range_max_frequency,
-                attack=data_group.attack_time,
-                release=data_group.release_time,
-                threshold=data_group.threshold,
-            )
+                # Insert a keyframe to generate an F-Curve for the property
+                scene.frame_set(self.frame_start)
+                frequency_band_data.keyframe_insert(
+                    f'["value"]',
+                    frame=self.frame_start,
+                    group=self.fcurve_group_name)
+
+                # Bake the sound into the new property
+                # If this fails due to sound_bake.poll() failing, see the poll() source code here: https://github.com/blender/blender/blob/2d1cce8331f3ecdfb8cb0c651e111ffac5dc7153/source/blender/editors/space_graph/graph_utils.c#L292
+                # The sound_bake operation source code is here: https://github.com/blender/blender/blob/600a627f6e326f4542a876e6e82f771cd3da218f/source/blender/editors/space_graph/graph_edit.c#L1845
+                bpy.ops.graph.sound_bake(
+                    filepath=self.filepath,
+                    low=range_min_frequency,
+                    high=range_max_frequency,
+                    attack=data_group.attack_time,
+                    release=data_group.release_time,
+                    threshold=data_group.threshold,
+                )
+        finally:
+            window_manager.progress_end()
 
     def __post_process_fcurves(self, scene, data_group):
         frame_start_current = self.frame_start
@@ -281,10 +298,10 @@ class TOOL_OT_bakeaudio(bpy.types.Operator):
                 # Update the scene's start and end frames
                 if self.update_preview_range:
                     scene.frame_start = start
-                    # scene.frame_preview_start = start
+                    scene.frame_preview_start = start
 
                     scene.frame_end = end
-                    # scene.frame_preview_end = end
+                    scene.frame_preview_end = end
 
 
 def register():

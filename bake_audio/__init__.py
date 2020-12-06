@@ -14,7 +14,7 @@ __modules = [
 bl_info = {
     "name": "BakeAudio",
     "author": "Rohit Ramu <rohitramu@gmail.com>",
-    "version": (1, 0),
+    "version": (1, 0, 1),
     "blender": (2, 80, 0),
     "category": "Tools",
     "location": "Select object -> Tools panel",

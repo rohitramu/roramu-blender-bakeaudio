@@ -16,7 +16,7 @@ class TOOL_PT_bakeaudio_groups(bpy.types.Panel):
     bl_region_type = "WINDOW"
     # bl_context_mode = 'OBJECT'
     # bl_context = 'scene'
-    bl_label = "Audio Data"
+    bl_label = "Audio Data (Read-Only)"
     bl_parent_id = TOOL_PT_bakeaudio.__name__
 
     def draw(self, context):
