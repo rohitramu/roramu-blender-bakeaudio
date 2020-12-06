@@ -1,0 +1,33 @@
+language: minimal
+
+env:
+  global:
+    - ADDON_NAME=bake_audio
+    - ARTIFACTS_FOLDER=.publish_temp
+    - FILE_NAME=${ADDON_NAME}_${TRAVIS_TAG}
+
+branches:
+  # expected format: v1.0.0-preReleaseTag
+  only:
+    - /^v[1-9][0.9]*\.[0-9]+\.[0-9]+(-[a-zA-Z]+)?$/
+
+before_deploy:
+  - rm -rf $ARTIFACTS_FOLDER || exit 0
+  - mkdir $ARTIFACTS_FOLDER
+  - cp LICENSE $ARTIFACTS_FOLDER/
+  - cp README.md $ARTIFACTS_FOLDER/
+  - cp -R $ADDON_NAME $ARTIFACTS_FOLDER/
+  - (cd $ARTIFACTS_FOLDER && tar -czvf "../${FILE_NAME}.tar.gz" $(ls -A))
+  - (cd $ARTIFACTS_FOLDER && zip -rv "../${FILE_NAME}.zip" .)
+  - ls -R
+
+deploy:
+  # GitHub - Add zip to release
+  - provider: releases
+    api_key: ${GITHUB_API_KEY}
+    file:
+      - ${FILE_NAME}.tar.gz
+      - ${FILE_NAME}.zip
+    skip_cleanup: true
+    on:
+      tags: true
