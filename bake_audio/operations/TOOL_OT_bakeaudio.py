@@ -14,7 +14,7 @@ class TOOL_OT_bakeaudio(bpy.types.Operator):
     bl_category = 'Tool'
     bl_options = {'REGISTER'}
 
-    __log_base = math.e
+    __log_base = 2  # math.e
     __action_name = 'Bake Audio'
 
     filepath: str
@@ -247,8 +247,8 @@ class TOOL_OT_bakeaudio(bpy.types.Operator):
 
                 # Insert a keyframe to generate an F-Curve for the property
                 scene.frame_set(self.frame_start)
-                frequency_band_data.keyframe_insert(
-                    f'["value"]',
+                scene.keyframe_insert(
+                    f'bakeaudio.data["{data_group.name}"].bands[{frequency_band_data.index}]["value"]',
                     frame=self.frame_start,
                     group=self.fcurve_group_name)
 

@@ -14,9 +14,9 @@ branches:
 before_deploy:
   - rm -rf $ARTIFACTS_FOLDER || exit 0
   - mkdir $ARTIFACTS_FOLDER
-  - cp LICENSE $ARTIFACTS_FOLDER/
-  - cp README.md $ARTIFACTS_FOLDER/
   - cp -R $ADDON_NAME $ARTIFACTS_FOLDER/
+  - cp LICENSE $ARTIFACTS_FOLDER/$ADDON_NAME
+  - cp README.md $ARTIFACTS_FOLDER/$ADDON_NAME
   - (cd $ARTIFACTS_FOLDER && tar -czvf "../${FILE_NAME}.tar.gz" $(ls -A))
   - (cd $ARTIFACTS_FOLDER && zip -rv "../${FILE_NAME}.zip" .)
   - ls -R

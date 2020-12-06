@@ -149,10 +149,10 @@ class TOOL_PT_bakeaudio_groups(bpy.types.Panel):
         cell = value_col.box().column()
         cell.alignment = 'CENTER'
         row = cell.row(align=True)
+        row.use_property_split = True
+        row.use_property_decorate = False
         row.alignment = 'CENTER'
-        row.label(text=f'Value')
-        row.label(text='@ frame')
-        row.prop(context.scene, 'frame_current', text='')
+        row.prop(context.scene, 'frame_current', text='Value @ frame')
 
         index_col.separator(factor=0.2)
         frequency_col.separator(factor=0.2)

@@ -12,12 +12,12 @@ __modules = [
 
 
 bl_info = {
-    "name": "BakeAudio",
+    "name": "Bake Audio",
     "author": "Rohit Ramu <rohitramu@gmail.com>",
-    "version": (1, 0, 1),
+    "version": (1, 0, 2),
     "blender": (2, 80, 0),
     "category": "Tools",
-    "location": "Select object -> Tools panel",
+    "location": "Scene properties -> Bake Audio",
     "description": "Bake audio into f-curves, split into frequency ranges.",
 }
 
