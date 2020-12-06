@@ -123,9 +123,9 @@ class TOOL_PT_bakeaudio_groups(bpy.types.Panel):
             box.label(text='No frequency data for this group.')
             return
 
-        self.draw_group_data1(context, top_col.box(), group)
+        self.draw_group_data(context, top_col.box(), group)
 
-    def draw_group_data1(self, context, layout, group):
+    def draw_group_data(self, context, layout, group):
         layout = layout.column(align=True)
 
         data_table = layout.row(align=True)
@@ -178,49 +178,7 @@ class TOOL_PT_bakeaudio_groups(bpy.types.Panel):
             row.alignment = 'EXPAND'
             # row.emboss = 'NONE'
             row.prop(frequency_band, 'value', text='')
-
-    def draw_group_data2(self, context, layout, group):
-        layout = layout.column(align=True)
-
-        # Header row for the table
-        header_row = layout.row(align=True)
-        cell = header_row.box()
-        row = cell.row()
-        row.alignment = 'CENTER'
-        row.label(text='Band #')
-        cell.label(text='')
-
-        cell = header_row.box()
-        row = cell.row()
-        row.alignment = 'CENTER'
-        row.label(text='Frequency range (Hz)')
-        row = cell.row(align=True)
-        row.label(text='')
-        row.label(text='')
-
-        cell = header_row.box()
-        row = cell.row()
-        row.alignment = 'CENTER'
-        row.label(text=f'Value @ frame {context.scene.frame_current}')
-        cell.label(text='')
-
-        data_table = layout.column(align=True)
-
-        for frequency_band in group.bands:
-            row = data_table.row(align=True)
-
-            cell = row.box().row(align=True)
-            cell.emboss = 'NONE'
-            cell.prop(frequency_band, 'index', text='')
-
-            cell = row.box().row(align=True)
-            cell.emboss = 'NONE'
-            cell.prop(frequency_band, 'frequency_band_min', text='')
-            cell.prop(frequency_band, 'frequency_band_max', text='')
-
-            cell = row.box().row(align=True)
-            # cell.emboss = 'NONE'
-            cell.prop(frequency_band, 'value', text='')
+            # TODO: Add a button to copy the fcurve's data path instead of the property's
 
 
 def register():
